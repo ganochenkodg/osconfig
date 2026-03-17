@@ -134,3 +134,47 @@ func TestRunExecStep(t *testing.T) {
 		})
 	}
 }
+
+func TestGetGCSObject(t *testing.T) {
+	ctx := context.Background()
+	testContent := "test script content"
+	bucket := "test-bucket"
+	object := "scripts/test.sh"
+
+	// emulate GCS
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == fmt.Sprintf("/storage/v1/b/%s/o/%s", bucket, "scripts%2Ftest.sh") {
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(testContent))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"name": "%s", "bucket": "%s"}`, object, bucket)
+	}))
+	defer ts.Close()
+
+	// use STORAGE_EMULATOR_HOST
+	// https://docs.cloud.google.com/go/docs/reference/cloud.google.com/go/storage/latest#hdr-Creating_a_Client
+	os.Setenv("STORAGE_EMULATOR_HOST", ts.URL)
+	defer os.Unsetenv("STORAGE_EMULATOR_HOST")
+
+	localPath, err := getGCSObject(ctx, bucket, object, 0)
+	if err != nil {
+		t.Fatalf("getGCSObject failed: %v", err)
+	}
+	defer os.Remove(localPath)
+
+	content, err := os.ReadFile(localPath)
+	if err != nil {
+		t.Fatalf("Failed to read downloaded file: %v", err)
+	}
+
+	if string(content) != testContent {
+		t.Errorf("Content mismatch: got %q, want %q", string(content), testContent)
+	}
+
+	if filepath.Base(localPath) != "test.sh" {
+		t.Errorf("Expected filename test.sh, got %s", filepath.Base(localPath))
+	}
+}
