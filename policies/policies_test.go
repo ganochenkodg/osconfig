@@ -405,9 +405,7 @@ func TestSetConfig(t *testing.T) {
 
 			mockCommandRunner := utilmocks.NewMockCommandRunner(mockCtrl)
 			setupSetConfigTest(t, tt.aptExists, tt.yumExists, tt.zypperExists, tt.googetExists, mockCommandRunner)
-
 			setExpectations(mockCommandRunner, tt.expectations)
-
 			setConfig(context.Background(), tt.egp)
 		})
 	}
