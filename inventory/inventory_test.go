@@ -3,12 +3,16 @@ package inventory
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/osconfig/agentconfig"
 	"github.com/GoogleCloudPlatform/osconfig/osinfo"
 	"github.com/GoogleCloudPlatform/osconfig/packages"
-	"github.com/google/go-cmp/cmp"
+	"github.com/GoogleCloudPlatform/osconfig/util/utiltest"
 )
 
 func TestProvider(t *testing.T) {
@@ -129,20 +133,63 @@ func TestProvider(t *testing.T) {
 			ctx := context.Background()
 			got := provider.Get(ctx)
 
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("unexpected diff, diff:\n%s", diff)
-			}
-
+			utiltest.AssertEquals(t, got, tt.want)
 		})
 	}
 
 }
 
+// TestNewProvider tests the NewProvider constructor.
 func TestNewProvider(t *testing.T) {
-	provider := NewProvider()
+	t.Cleanup(func() {
+		setTraceGetInventory(t, false)
+	})
 
-	if provider == nil {
-		t.Errorf("provider is not valid")
+	tests := []struct {
+		name              string
+		traceGetInventory bool
+	}{
+		{
+			name:              "trace get inventory disabled, want non-nil provider",
+			traceGetInventory: false,
+		},
+		{
+			name:              "trace get inventory enabled, want non-nil provider",
+			traceGetInventory: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setTraceGetInventory(t, tt.traceGetInventory)
+
+			gotProvider := NewProvider()
+			defaultProvider, _ := gotProvider.(*defaultInventoryProvider)
+			utiltest.AssertEquals(t, defaultProvider.clock, defaultClock{})
+		})
+	}
+}
+
+// TestDefaultClock tests the defaultClock implementation.
+func TestDefaultClock(t *testing.T) {
+	c := newDefaultClock()
+	now := c.Now()
+	if now.IsZero() {
+		t.Error("expected non-zero time from defaultClock.Now()")
+	}
+}
+
+// setTraceGetInventory sets the trace-get-inventory configuration via a mock metadata server.
+func setTraceGetInventory(t *testing.T, val bool) {
+	t.Helper()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"instance":{"attributes":{"trace-get-inventory":"%t"}}}`, val)
+	}))
+	t.Setenv("GCE_METADATA_HOST", strings.TrimPrefix(ts.URL, "http://"))
+	t.Cleanup(ts.Close)
+
+	if err := agentconfig.WatchConfig(context.Background()); err != nil {
+		t.Fatalf("WatchConfig() err: %v", err)
 	}
 }
 
