@@ -387,7 +387,7 @@ func toUtsField(val string) [65]byte {
 // TestNewLinuxOsInfoProvider tests the NewLinuxOsInfoProvider constructor.
 func TestNewLinuxOsInfoProvider(t *testing.T) {
 	ctx := context.Background()
-	dummyProvider := getOsNameAndVersionProvider(ctx)
+	mockProvider := getOsNameAndVersionProvider(ctx)
 	unameErr := errors.New("uname error")
 
 	tests := []struct {
@@ -419,7 +419,7 @@ func TestNewLinuxOsInfoProvider(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			utiltest.OverrideVariable(t, &unameFn, tt.uname)
-			gotProvider, gotErr := NewLinuxOsInfoProvider(dummyProvider)
+			gotProvider, gotErr := NewLinuxOsInfoProvider(mockProvider)
 
 			utiltest.AssertErrorMatchAndSkip(t, gotErr, tt.wantErr)
 			utiltest.AssertEquals(t, gotProvider.uts, tt.wantUts)
@@ -443,14 +443,14 @@ func TestGet(t *testing.T) {
 	tests := []struct {
 		name               string
 		releaseFileContent string
-		unameFunc          func(buf *unix.Utsname) error
+		uname              func(buf *unix.Utsname) error
 		wantOSInfo         OSInfo
 		wantErr            error
 	}{
 		{
 			name:               "Debian release file, want expected OSInfo and nil error",
 			releaseFileContent: debianReleaseFileContent,
-			unameFunc: func(buf *unix.Utsname) error {
+			uname: func(buf *unix.Utsname) error {
 				*buf = uts
 				return nil
 			},
@@ -466,9 +466,9 @@ func TestGet(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:               "failed uname syscall, want error",
+			name:               "failed uname syscall, want uname error",
 			releaseFileContent: debianReleaseFileContent,
-			unameFunc: func(buf *unix.Utsname) error {
+			uname: func(buf *unix.Utsname) error {
 				return unameErr
 			},
 			wantOSInfo: OSInfo{},
@@ -478,7 +478,7 @@ func TestGet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setupGetTest(t, tt.releaseFileContent, tt.unameFunc)
+			setupGetTest(t, tt.releaseFileContent, tt.uname)
 			gotOSInfo, gotErr := Get()
 
 			utiltest.AssertErrorMatch(t, gotErr, tt.wantErr)
