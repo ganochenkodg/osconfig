@@ -106,6 +106,9 @@ type Packages struct {
 	COS                []*PkgInfo            `json:"cos,omitempty"`
 	Gem                []*PkgInfo            `json:"gem,omitempty"`
 	Pip                []*PkgInfo            `json:"pip,omitempty"`
+	Maven              []*PkgInfo            `json:"maven,omitempty"`
+	Npm                []*PkgInfo            `json:"npm,omitempty"`
+	Go                 []*PkgInfo            `json:"go,omitempty"`
 	GooGet             []*PkgInfo            `json:"googet,omitempty"`
 	WUA                []*WUAPackage         `json:"wua,omitempty"`
 	QFE                []*QFEPackage         `json:"qfe,omitempty"`
@@ -126,6 +129,9 @@ const (
 	typeGooGet = "googet"
 	typeGem    = "gem"
 	typePypi   = "pypi"
+	typeMaven  = "maven"
+	typeNpm    = "npm"
+	typeGolang = "golang"
 )
 
 // Source represents source package from which binary package was built.

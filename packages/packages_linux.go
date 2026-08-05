@@ -271,6 +271,11 @@ func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPacka
 				"os/cos",
 				"os/dpkg",
 				"os/rpm",
+				"language/python/pip",
+				"language/ruby/gem",
+				"language/javascript/npm",
+				"language/java/maven",
+				"language/go/module",
 			},
 			osinfoProvider: osinfoProvider,
 		}
