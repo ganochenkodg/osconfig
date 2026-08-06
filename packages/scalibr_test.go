@@ -99,6 +99,53 @@ func TestExtractedPackageMappings(t *testing.T) {
 			},
 			want: Packages{},
 		},
+		{
+			name: "language extractors, want mapped language packages",
+			pkgs: []*extractor.Package{
+				{
+					Name:     "requests",
+					Version:  "2.28.1",
+					PURLType: "pypi",
+				},
+				{
+					Name:     "rails",
+					Version:  "7.0.4",
+					PURLType: "gem",
+				},
+				{
+					Name:     "express",
+					Version:  "4.18.2",
+					PURLType: "npm",
+				},
+				{
+					Name:     "org.springframework:spring-core",
+					Version:  "5.3.23",
+					PURLType: "maven",
+				},
+				{
+					Name:     "github.com/gin-gonic/gin",
+					Version:  "v1.8.1",
+					PURLType: "golang",
+				},
+			},
+			want: Packages{
+				Pip: []*PkgInfo{
+					{Name: "requests", Version: "2.28.1", Type: "pypi", Purl: "pkg:pypi/requests@2.28.1"},
+				},
+				Gem: []*PkgInfo{
+					{Name: "rails", Version: "7.0.4", Type: "gem", Purl: "pkg:gem/rails@7.0.4"},
+				},
+				Npm: []*PkgInfo{
+					{Name: "express", Version: "4.18.2", Type: "npm", Purl: "pkg:npm/express@4.18.2"},
+				},
+				Maven: []*PkgInfo{
+					{Name: "org.springframework:spring-core", Version: "5.3.23", Type: "maven", Purl: "pkg:maven/org.springframework%3Aspring-core@5.3.23"},
+				},
+				Go: []*PkgInfo{
+					{Name: "github.com/gin-gonic/gin", Version: "v1.8.1", Type: "golang", Purl: "pkg:golang/github.com/gin-gonic/gin@v1.8.1"},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
