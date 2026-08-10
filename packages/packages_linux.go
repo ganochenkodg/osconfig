@@ -275,6 +275,7 @@ func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPacka
 				"ruby/gemspec",
 				"javascript/packagejson",
 				"java/archive",
+				"java/pomxml",
 				"go/binary",
 				"go/gomod",
 				// All possible language extractors
@@ -286,7 +287,6 @@ func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPacka
 				// "javascript/packagelockjson",
 				// "javascript/yarnlock",
 				// "javascript/pnpmlock",
-				// "java/pomxml",
 			},
 			osinfoProvider: osinfoProvider,
 		}
