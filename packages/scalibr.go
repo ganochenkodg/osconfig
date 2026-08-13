@@ -190,5 +190,5 @@ func (p *scalibrInstalledPackagesProvider) GetInstalledPackages(ctx context.Cont
 		}
 		pkgs.ZypperPatches = zypperPatches
 	}
-	return pkgs, nil
+	return pkgs, err
 }
