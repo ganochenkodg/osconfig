@@ -108,6 +108,14 @@ func pkgInfosFromExtractorPackages(ctx context.Context, scan *scalibr.ScanResult
 				packages.Maven = append(packages.Maven, pkgInfoFromLanguageExtractorPackage(pkg, purl.TypeMaven))
 			case purl.TypeGolang:
 				packages.Go = append(packages.Go, pkgInfoFromLanguageExtractorPackage(pkg, purl.TypeGolang))
+			case purl.TypeCargo:
+				packages.Cargo = append(packages.Cargo, pkgInfoFromLanguageExtractorPackage(pkg, purl.TypeCargo))
+			case purl.TypeComposer:
+				packages.Composer = append(packages.Composer, pkgInfoFromLanguageExtractorPackage(pkg, purl.TypeComposer))
+			case purl.TypeSwift:
+				packages.Swift = append(packages.Swift, pkgInfoFromLanguageExtractorPackage(pkg, purl.TypeSwift))
+			case purl.TypePub:
+				packages.Pub = append(packages.Pub, pkgInfoFromLanguageExtractorPackage(pkg, purl.TypePub))
 			default:
 				clog.Errorf(ctx, "Package type not implemented: %v", pkg)
 			}

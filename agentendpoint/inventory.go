@@ -190,6 +190,18 @@ func formatPkgsToInventoryItems(ctx context.Context, pkgs *packages.Packages) []
 	if pkgs.Go != nil {
 		softwarePackages = append(softwarePackages, languageToInventoryItem(pkgs.Go)...)
 	}
+	if pkgs.Cargo != nil {
+		softwarePackages = append(softwarePackages, languageToInventoryItem(pkgs.Cargo)...)
+	}
+	if pkgs.Composer != nil {
+		softwarePackages = append(softwarePackages, languageToInventoryItem(pkgs.Composer)...)
+	}
+	if pkgs.Swift != nil {
+		softwarePackages = append(softwarePackages, languageToInventoryItem(pkgs.Swift)...)
+	}
+	if pkgs.Pub != nil {
+		softwarePackages = append(softwarePackages, languageToInventoryItem(pkgs.Pub)...)
+	}
 	return softwarePackages
 }
 
