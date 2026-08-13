@@ -265,13 +265,19 @@ func enrichZypperPatchWithPurl(pkgs []*ZypperPatch, shortname string) []*ZypperP
 
 // NewInstalledPackagesProvider makes provider that uses osv-scalibr as its implementation if enabled by config, otherwise falls back to default legacy implementation.
 func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPackagesProvider {
-	if agentconfig.ScalibrLinuxEnabled() {
-		return scalibrInstalledPackagesProvider{
-			extractors: []string{
-				"os/cos",
-				"os/dpkg",
-				"os/rpm",
-			},
+	scalibrEnabled := agentconfig.ScalibrLinuxEnabled()
+	extendedEnabled := agentconfig.ExtendedInventoryEnabled()
+
+	if scalibrEnabled || extendedEnabled {
+		var extractors []string
+		if scalibrEnabled {
+			extractors = append(extractors, "os/cos", "os/dpkg", "os/rpm")
+		}
+		if extendedEnabled {
+			extractors = append(extractors, agentconfig.ExtendedInventoryExtractorsAllowed()...)
+		}
+		return &scalibrInstalledPackagesProvider{
+			extractors:     extractors,
 			osinfoProvider: osinfoProvider,
 		}
 	}

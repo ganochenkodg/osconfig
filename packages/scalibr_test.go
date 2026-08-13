@@ -159,7 +159,7 @@ func TestScalibrIntegration(t *testing.T) {
 		{
 			name:  "successful scan, expect packages",
 			setup: func(t *testing.T) {},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: stubProvider{},
 				extractors:     []string{"os/dpkg"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},
@@ -174,7 +174,7 @@ func TestScalibrIntegration(t *testing.T) {
 		{
 			name:  "osinfo provider error, expect osinfo error",
 			setup: func(t *testing.T) {},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: errorProvider{},
 				extractors:     []string{"os/dpkg"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},
@@ -185,7 +185,7 @@ func TestScalibrIntegration(t *testing.T) {
 		{
 			name:  "invalid extractor, expect unknown plugin error",
 			setup: func(t *testing.T) {},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: stubProvider{},
 				extractors:     []string{"invalid/extractor"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},
@@ -196,7 +196,7 @@ func TestScalibrIntegration(t *testing.T) {
 		{
 			name:  "skipped directory, expect no packages",
 			setup: func(t *testing.T) {},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: stubProvider{},
 				extractors:     []string{"os/dpkg"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},
@@ -212,7 +212,7 @@ func TestScalibrIntegration(t *testing.T) {
 				utiltest.OverrideVariable(t, &ZypperExists, true)
 				mockCommandRunner.EXPECT().Run(gomock.Any(), gomock.Any()).Return([]byte("Repo | PatchName | security | critical | --- | applied | Patch summary\n"), []byte(""), nil).Times(1)
 			},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: stubProvider{},
 				extractors:     []string{"os/dpkg"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},
@@ -236,7 +236,7 @@ func TestScalibrIntegration(t *testing.T) {
 				utiltest.OverrideVariable(t, &ZypperExists, true)
 				mockCommandRunner.EXPECT().Run(gomock.Any(), gomock.Any()).Return(nil, nil, errors.New("zypper error")).Times(1)
 			},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: stubProvider{},
 				extractors:     []string{"os/dpkg"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},
@@ -253,7 +253,7 @@ func TestScalibrIntegration(t *testing.T) {
 		{
 			name:  "scalibr scan fails, expect unhealthy status error",
 			setup: func(t *testing.T) {},
-			provider: scalibrInstalledPackagesProvider{
+			provider: &scalibrInstalledPackagesProvider{
 				osinfoProvider: stubProvider{},
 				extractors:     []string{"os/dpkg"},
 				scanRootPaths:  []string{arrangeVirtualRoot(t, "./testdata/debian.dpkg-status", "/var/lib/dpkg/status")},

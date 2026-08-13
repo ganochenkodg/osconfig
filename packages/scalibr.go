@@ -3,6 +3,8 @@ package packages
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/GoogleCloudPlatform/osconfig/clog"
 	"github.com/GoogleCloudPlatform/osconfig/osinfo"
@@ -136,7 +138,7 @@ type scalibrInstalledPackagesProvider struct {
 	dirsToSkip     []string
 }
 
-func (p scalibrInstalledPackagesProvider) GetInstalledPackages(ctx context.Context) (Packages, error) {
+func (p *scalibrInstalledPackagesProvider) GetInstalledPackages(ctx context.Context) (Packages, error) {
 	config, err := p.getScanConfig()
 	if err != nil {
 		return Packages{}, err
@@ -154,6 +156,32 @@ func (p scalibrInstalledPackagesProvider) GetInstalledPackages(ctx context.Conte
 
 	pkgs := pkgInfosFromExtractorPackages(ctx, scan, &osinfo)
 
+	// Hybrid fallback: if base OS extractors are not included in SCALIBR allowed extractors, use native extractors.
+	hasExtractor := func(name string) bool {
+		for _, e := range p.extractors {
+			if e == name {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !hasExtractor("os/dpkg") && DpkgQueryExists && len(pkgs.Deb) == 0 {
+		if deb, err := InstalledDebPackages(ctx); err == nil {
+			pkgs.Deb = enrichDebPkgInfoWithPurl(deb, osinfo.ShortName, osinfo.Version)
+		}
+	}
+	if !hasExtractor("os/rpm") && RPMQueryExists && len(pkgs.Rpm) == 0 {
+		if rpm, err := InstalledRPMPackages(ctx); err == nil {
+			pkgs.Rpm = enrichRpmPkgInfoWithPurl(rpm, osinfo.ShortName, osinfo.Version)
+		}
+	}
+	if !hasExtractor("os/cos") && COSPkgInfoExists && len(pkgs.COS) == 0 {
+		if cos, err := InstalledCOSPackages(); err == nil {
+			pkgs.COS = enrichCosPkgInfoWithPurl(cos, osinfo.ShortName, osinfo.Version)
+		}
+	}
+
 	// TODO: replace zypper patches legacy extractor with implemented "os/zypper" extractor
 	if ZypperExists {
 		zypperPatches, err := ZypperInstalledPatches(ctx)
@@ -162,5 +190,5 @@ func (p scalibrInstalledPackagesProvider) GetInstalledPackages(ctx context.Conte
 		}
 		pkgs.ZypperPatches = zypperPatches
 	}
-	return pkgs, err
+	return pkgs, nil
 }
