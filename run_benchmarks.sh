@@ -4,6 +4,8 @@ set -e
 # Benchmark runner script for SCALIBR extractors.
 # Measures execution time, heap allocations, OS peak RAM RSS, and CPU utilization.
 
+export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+
 if [ ! -f ./bench_scalibr ]; then
     echo "Building bench_scalibr binary..."
     go build -o bench_scalibr ./cmd/bench_scalibr
