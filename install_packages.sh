@@ -90,7 +90,7 @@ cat << 'EOF' > /opt/demo-rust/Cargo.toml
 [package]
 name = "demo-rust"
 version = "0.1.0"
-edition = "2021"
+edition = "2018"
 
 [dependencies]
 serde = "1.0"
@@ -114,9 +114,11 @@ checksum = "3fb1c873e1b9ce60114213d875502a88498cd0c632e2d9b89569e5d4d3b664d4"
 EOF
 
 # Build rust binary & install cargo-auditable if possible
-cd /opt/demo-rust && cargo build || true
+export PATH=$PATH:$HOME/.cargo/bin:/root/.cargo/bin
+cd /opt/demo-rust
+cargo build || true
 cargo install cargo-auditable || true
-cargo auditable build || true
+cargo-auditable build || cargo auditable build || true
 
 echo "===================================================="
 echo "7. Installing Java & sample manifest files (java/archive, java/pomxml, java/gradlelockfile)"
