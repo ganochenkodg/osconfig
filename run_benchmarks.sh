@@ -4,8 +4,12 @@ set -e
 # Benchmark runner script for SCALIBR extractors.
 # Measures execution time, heap allocations, OS peak RAM RSS, and CPU utilization.
 
-echo "Building bench_scalibr binary..."
-go build -o bench_scalibr ./cmd/bench_scalibr
+if [ ! -f ./bench_scalibr ]; then
+    echo "Building bench_scalibr binary..."
+    go build -o bench_scalibr ./cmd/bench_scalibr
+else
+    echo "Using existing bench_scalibr binary..."
+fi
 
 TIME_CMD="/usr/bin/time -v"
 TIME_LOG="/tmp/scalibr_time.log"
@@ -75,6 +79,6 @@ done
 ALL_EXTS=$(IFS=,; echo "${EXTRACTORS[*]}")
 run_benchmark_case "All Selected Combined" "os/dpkg,os/rpm,os/cos,$ALL_EXTS" 3
 
-rm -f bench_scalibr /tmp/scalibr_time.log /tmp/bench_out.txt
+rm -f /tmp/scalibr_time.log /tmp/bench_out.txt
 echo ""
 echo "Benchmark run complete!"
