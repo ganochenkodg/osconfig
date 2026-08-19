@@ -113,12 +113,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fb1c873e1b9ce60114213d875502a88498cd0c632e2d9b89569e5d4d3b664d4"
 EOF
 
-# Build rust binary & install cargo-auditable if possible
-export PATH=$PATH:$HOME/.cargo/bin:/root/.cargo/bin
+# Download precompiled cargo-auditable binary for instant setup
+echo "Installing precompiled cargo-auditable..."
+curl -fsSL https://github.com/rust-sec/cargo-auditable/releases/download/v0.6.2/cargo-auditable-x86_64-unknown-linux-musl.tar.gz -o /tmp/cargo-auditable.tar.gz || true
+if [ -f /tmp/cargo-auditable.tar.gz ]; then
+    tar -xzf /tmp/cargo-auditable.tar.gz -C /usr/local/bin cargo-auditable || true
+    rm -f /tmp/cargo-auditable.tar.gz
+fi
+
 cd /opt/demo-rust
 cargo build || true
-cargo install cargo-auditable || true
-cargo-auditable build || cargo auditable build || true
+if command -v cargo-auditable >/dev/null 2>&1; then
+    cargo-auditable build || true
+fi
 
 echo "===================================================="
 echo "7. Installing Java & sample manifest files (java/archive, java/pomxml, java/gradlelockfile)"
@@ -152,7 +159,7 @@ EOF
 echo "===================================================="
 echo "8. Generating sample Swift & Dart manifest files (swift/packageresolved, dart/pubspec)"
 echo "===================================================="
-mkdir -p /opt/demo-swift
+mkdir -p /opt/demo-swift/DemoApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
 cat << 'EOF' > /opt/demo-swift/Package.resolved
 {
   "version": 1,
@@ -171,6 +178,7 @@ cat << 'EOF' > /opt/demo-swift/Package.resolved
   }
 }
 EOF
+cp /opt/demo-swift/Package.resolved /opt/demo-swift/DemoApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 mkdir -p /opt/demo-dart
 cat << 'EOF' > /opt/demo-dart/pubspec.lock
