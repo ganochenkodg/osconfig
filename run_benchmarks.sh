@@ -13,7 +13,12 @@ else
     echo "Using existing bench_scalibr binary..."
 fi
 
-TIME_CMD="/usr/bin/time -v"
+# Detect available time command
+TIME_CMD=""
+if [ -x /usr/bin/time ]; then
+    TIME_CMD="/usr/bin/time -v"
+fi
+
 TIME_LOG="/tmp/scalibr_time.log"
 
 run_benchmark_case() {
@@ -21,23 +26,31 @@ run_benchmark_case() {
     local extractors="$2"
     local runs="${3:-3}"
 
-    # Run bench_scalibr under /usr/bin/time -v
-    $TIME_CMD ./bench_scalibr -extractors="$extractors" -runs="$runs" 2> "$TIME_LOG" > /tmp/bench_out.txt
+    rm -f "$TIME_LOG" /tmp/bench_out.txt
+
+    if [ -n "$TIME_CMD" ]; then
+        $TIME_CMD ./bench_scalibr -extractors="$extractors" -runs="$runs" 2> "$TIME_LOG" > /tmp/bench_out.txt
+    else
+        ./bench_scalibr -extractors="$extractors" -runs="$runs" > /tmp/bench_out.txt 2> /dev/null
+    fi
 
     local bench_out
-    bench_out=$(cat /tmp/bench_out.txt)
+    bench_out=$(cat /tmp/bench_out.txt 2>/dev/null || echo "")
 
-    # Parse /usr/bin/time metrics
-    local max_rss_kb user_cpu cpu_percent
-    max_rss_kb=$(grep "Maximum resident set size" "$TIME_LOG" | awk '{print $NF}')
-    user_cpu=$(grep "User time" "$TIME_LOG" | awk '{print $NF}')
-    cpu_percent=$(grep "Percent of CPU" "$TIME_LOG" | awk '{print $NF}')
+    local max_rss_kb user_cpu cpu_percent max_rss_mb="N/A"
+    user_cpu="N/A"
+    cpu_percent="N/A"
 
-    local max_rss_mb
-    if [ -n "$max_rss_kb" ]; then
-        max_rss_mb=$(awk "BEGIN {printf \"%.2f\", $max_rss_kb/1024}")
-    else
-        max_rss_mb="N/A"
+    if [ -f "$TIME_LOG" ]; then
+        max_rss_kb=$(grep "Maximum resident set size" "$TIME_LOG" | awk '{print $NF}')
+        user_cpu=$(grep "User time" "$TIME_LOG" | awk '{print $NF}')
+        cpu_percent=$(grep "Percent of CPU" "$TIME_LOG" | awk '{print $NF}')
+
+        if [ -n "$max_rss_kb" ]; then
+            max_rss_mb=$(awk "BEGIN {printf \"%.2f\", $max_rss_kb/1024}")
+        fi
+        if [ -z "$user_cpu" ]; then user_cpu="N/A"; fi
+        if [ -z "$cpu_percent" ]; then cpu_percent="N/A"; fi
     fi
 
     # Output formatted Markdown row
