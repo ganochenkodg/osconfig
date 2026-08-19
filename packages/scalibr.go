@@ -3,8 +3,6 @@ package packages
 import (
 	"context"
 	"fmt"
-	"sync"
-	"time"
 
 	"github.com/GoogleCloudPlatform/osconfig/clog"
 	"github.com/GoogleCloudPlatform/osconfig/osinfo"

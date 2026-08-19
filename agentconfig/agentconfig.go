@@ -123,21 +123,21 @@ var (
 )
 
 type config struct {
-	aptRepoFilePath         string
-	instanceName            string
-	instanceZone            string
-	projectID               string
-	svcEndpoint             string
-	googetRepoFilePath      string
-	zypperRepoFilePath      string
-	yumRepoFilePath         string
-	instanceID              string
-	universeDomain          string
-	numericProjectID        int64
-	osConfigPollInterval    int
-	debugEnabled            bool
-	taskNotificationEnabled bool
-	guestPoliciesEnabled    bool
+	aptRepoFilePath                    string
+	instanceName                       string
+	instanceZone                       string
+	projectID                          string
+	svcEndpoint                        string
+	googetRepoFilePath                 string
+	zypperRepoFilePath                 string
+	yumRepoFilePath                    string
+	instanceID                         string
+	universeDomain                     string
+	numericProjectID                   int64
+	osConfigPollInterval               int
+	debugEnabled                       bool
+	taskNotificationEnabled            bool
+	guestPoliciesEnabled               bool
 	osInventoryEnabled                 bool
 	scalibrLinuxEnabled                bool
 	guestAttributesEnabled             bool
@@ -234,32 +234,32 @@ type universeJSON struct {
 }
 
 type attributesJSON struct {
-	PollIntervalOld                     *json.Number `json:"os-config-poll-interval"`
-	PollInterval                        *json.Number `json:"osconfig-poll-interval"`
-	InventoryEnabledOld                 string       `json:"os-inventory-enabled"`
-	InventoryEnabled                    string       `json:"enable-os-inventory"`
-	PreReleaseFeaturesOld               string       `json:"os-config-enabled-prerelease-features"`
-	PreReleaseFeatures                  string       `json:"osconfig-enabled-prerelease-features"`
-	DebugEnabledOld                     string       `json:"enable-os-config-debug"`
-	LogLevel                            string       `json:"osconfig-log-level"`
-	OSConfigEndpointOld                 string       `json:"os-config-endpoint"`
-	OSConfigEndpoint                    string       `json:"osconfig-endpoint"`
-	OSConfigEnabled                     string       `json:"enable-osconfig"`
-	DisabledFeatures                    string       `json:"osconfig-disabled-features"`
-	EnableGuestAttributes               string       `json:"enable-guest-attributes"`
-	TraceGetInventory                  string `json:"trace-get-inventory"`
-	ScalibrLinuxEnabled                string `json:"enable-scalibr-linux"`
-	ExtendedInventoryEnabled           string `json:"osconfig-extended-inventory-enabled"`
-	ExtendedInventoryExtractorsAllowed string `json:"osconfig-extended-inventory-extractors-allowed"`
+	PollIntervalOld                    *json.Number `json:"os-config-poll-interval"`
+	PollInterval                       *json.Number `json:"osconfig-poll-interval"`
+	InventoryEnabledOld                string       `json:"os-inventory-enabled"`
+	InventoryEnabled                   string       `json:"enable-os-inventory"`
+	PreReleaseFeaturesOld              string       `json:"os-config-enabled-prerelease-features"`
+	PreReleaseFeatures                 string       `json:"osconfig-enabled-prerelease-features"`
+	DebugEnabledOld                    string       `json:"enable-os-config-debug"`
+	LogLevel                           string       `json:"osconfig-log-level"`
+	OSConfigEndpointOld                string       `json:"os-config-endpoint"`
+	OSConfigEndpoint                   string       `json:"osconfig-endpoint"`
+	OSConfigEnabled                    string       `json:"enable-osconfig"`
+	DisabledFeatures                   string       `json:"osconfig-disabled-features"`
+	EnableGuestAttributes              string       `json:"enable-guest-attributes"`
+	TraceGetInventory                  string       `json:"trace-get-inventory"`
+	ScalibrLinuxEnabled                string       `json:"enable-scalibr-linux"`
+	ExtendedInventoryEnabled           string       `json:"osconfig-extended-inventory-enabled"`
+	ExtendedInventoryExtractorsAllowed string       `json:"osconfig-extended-inventory-extractors-allowed"`
 }
 
 func createConfigFromMetadata(md metadataJSON) *config {
 	old := getAgentConfig()
 	c := &config{
-		osInventoryEnabled:                  osInventoryEnabledDefault,
-		guestPoliciesEnabled:                guestPoliciesEnabledDefault,
-		taskNotificationEnabled:             taskNotificationEnabledDefault,
-		debugEnabled:                        debugEnabledDefault,
+		osInventoryEnabled:       osInventoryEnabledDefault,
+		guestPoliciesEnabled:     guestPoliciesEnabledDefault,
+		taskNotificationEnabled:  taskNotificationEnabledDefault,
+		debugEnabled:             debugEnabledDefault,
 		svcEndpoint:              prodEndpoint,
 		osConfigPollInterval:     osConfigPollIntervalDefault,
 		extendedInventoryEnabled: extendedInventoryEnabledDefault,
@@ -628,16 +628,6 @@ func ScalibrLinuxEnabled() bool {
 	return getAgentConfig().scalibrLinuxEnabled
 }
 
-// ExtendedInventoryEnabled indicates whether extended inventory collection should be enabled.
-func ExtendedInventoryEnabled() bool {
-	return getAgentConfig().extendedInventoryEnabled
-}
-
-// ExtendedInventoryExtractorsAllowed returns the allowed extractors for extended inventory.
-func ExtendedInventoryExtractorsAllowed() []string {
-	return getAgentConfig().extendedInventoryExtractorsAllowed
-}
-
 // SvcEndpoint is the OS Config service endpoint.
 func SvcEndpoint() string {
 	return getAgentConfig().svcEndpoint
@@ -646,6 +636,16 @@ func SvcEndpoint() string {
 // TraceGetInventory turns on memory tracing while gathering inventory.
 func TraceGetInventory() bool {
 	return getAgentConfig().traceGetInventory
+}
+
+// ExtendedInventoryEnabled indicates whether extended inventory collection should be enabled.
+func ExtendedInventoryEnabled() bool {
+	return getAgentConfig().extendedInventoryEnabled
+}
+
+// ExtendedInventoryExtractorsAllowed returns the allowed extractors for extended inventory.
+func ExtendedInventoryExtractorsAllowed() []string {
+	return getAgentConfig().extendedInventoryExtractorsAllowed
 }
 
 // ZypperRepoDir is the location of the zypper repo files.
