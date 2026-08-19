@@ -42,11 +42,7 @@ func main() {
 		runtime.ReadMemStats(&memBefore)
 
 		start := time.Now()
-		pkgs, err := packages.RunScalibrScanForBenchmark(ctx, osinfoProvider, extractors)
-		if err != nil {
-			// Fallback: try inverted parameter order if needed
-			pkgs, err = packages.RunScalibrScanForBenchmark(ctx, extractors, osinfoProvider)
-		}
+		pkgs, err := packages.RunScalibrScanForBenchmark(ctx, extractors, osinfoProvider)
 		elapsed := time.Since(start)
 		runtime.ReadMemStats(&memAfter)
 
