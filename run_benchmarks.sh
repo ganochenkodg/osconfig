@@ -13,11 +13,8 @@ else
     echo "Using existing bench_scalibr binary..."
 fi
 
-# Detect available time command
-TIME_CMD=""
-if [ -x /usr/bin/time ]; then
-    TIME_CMD="/usr/bin/time -v"
-fi
+
+TIME_CMD="/usr/bin/time -v"
 
 TIME_LOG="/tmp/scalibr_time.log"
 
@@ -28,11 +25,7 @@ run_benchmark_case() {
 
     rm -f "$TIME_LOG" /tmp/bench_out.txt
 
-    if [ -n "$TIME_CMD" ]; then
-        $TIME_CMD ./bench_scalibr -extractors="$extractors" -runs="$runs" 2> "$TIME_LOG" > /tmp/bench_out.txt
-    else
-        ./bench_scalibr -extractors="$extractors" -runs="$runs" > /tmp/bench_out.txt 2> /dev/null
-    fi
+    $TIME_CMD ./bench_scalibr -extractors="$extractors" -runs="$runs" 2> "$TIME_LOG" > /tmp/bench_out.txt
 
     local bench_out
     bench_out=$(cat /tmp/bench_out.txt 2>/dev/null || echo "")
