@@ -195,12 +195,3 @@ func (p scalibrInstalledPackagesProvider) GetInstalledPackages(ctx context.Conte
 	}
 	return pkgs, err
 }
-
-// RunScalibrScanForBenchmark runs a SCALIBR scan with a custom list of extractors for benchmarking.
-func RunScalibrScanForBenchmark(ctx context.Context, extractors []string, osinfoProvider osinfo.Provider) (Packages, error) {
-	provider := &scalibrInstalledPackagesProvider{
-		extractors:     extractors,
-		osinfoProvider: osinfoProvider,
-	}
-	return provider.GetInstalledPackages(ctx)
-}

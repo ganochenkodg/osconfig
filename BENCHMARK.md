@@ -17,7 +17,7 @@ sudo ./install_packages.sh
 Run the Go benchmark test suite (isolated from standard CI pipelines using build tag `-tags=benchmark`):
 
 ```bash
-go test -v -tags=benchmark -run=TestScalibrBenchmark ./packages/
+sudo -E $(which go) test -v -tags=benchmark -run=TestScalibrBenchmark ./packages/
 ```
 
 ---
@@ -30,16 +30,15 @@ The benchmark suite measures both Go runtime metrics and OS-level system resourc
 | --- | --- | --- |
 | **Avg Scan Time** | Go `time.Since()` | Average execution duration of SCALIBR scan |
 | **Avg Heap Alloc** | `runtime.ReadMemStats` | Average RAM memory allocated in Go heap per scan run |
+| **Peak RAM RSS** | `utiltrace.TraceMemory` | Maximum Resident Set Size (peak physical memory used by process) |
+| **Peak CPU %** | `/proc/self/stat` | Peak CPU utilization percentage during execution |
+| **Mean CPU %** | `/proc/self/stat` | Average CPU utilization percentage during execution |
 | **Pkgs Found** | `packages.Packages` | Total number of installed software packages detected |
-| **Peak RAM RSS** | OS `/usr/bin/time -v` | Maximum Resident Set Size (peak physical memory used by process) |
-| **CPU User Time** | OS `/usr/bin/time -v` | Total CPU time spent in user-space execution |
-| **CPU Usage** | OS `/usr/bin/time -v` | Percentage of CPU utilization during execution |
 
 ---
 
 ## 📂 Benchmark Suite Files
 
-- **`cmd/bench_scalibr/main.go`**: Standalone Go benchmark tool that executes `RunScalibrScanForBenchmark`.
-- **`run_benchmarks.sh`**: Automated runner script executing baseline, single-extractor, and combined test cases.
+- **`packages/scalibr_bench_test.go`**: Go benchmark test suite (isolated from CI via `//go:build benchmark`).
 - **`install_packages.sh`**: Debian 12 environment installer generating real package files for scanning.
 - **`BENCHMARK.md`**: Documentation and usage instructions.
