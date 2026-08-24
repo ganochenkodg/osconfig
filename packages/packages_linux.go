@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/osconfig/agentconfig"
@@ -273,7 +274,7 @@ func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPacka
 		}
 		if agentconfig.ExtendedInventoryEnabled() {
 			for _, ext := range agentconfig.ExtendedInventoryExtractorsAllowed() {
-				if !contains(extractors, ext) {
+				if !slices.Contains(extractors, ext) {
 					extractors = append(extractors, ext)
 				}
 			}
@@ -287,13 +288,4 @@ func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPacka
 	return defaultInstalledPackagesProvider{
 		osinfoProvider: osinfoProvider,
 	}
-}
-
-func contains(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
 }
