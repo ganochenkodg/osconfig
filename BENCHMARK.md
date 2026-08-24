@@ -13,11 +13,11 @@ Run the environment preparation script with `sudo` to install Go, Python, Node.j
 sudo ./install_packages.sh
 ```
 
-### Step 2: Run Automated Benchmark Suite
-Run the benchmark suite script:
+### Step 2: Run Automated Benchmark Test
+Run the Go benchmark test suite (isolated from standard CI pipelines using build tag `-tags=benchmark`):
 
 ```bash
-./run_benchmarks.sh
+go test -v -tags=benchmark -run=TestScalibrBenchmark ./packages/
 ```
 
 ---
