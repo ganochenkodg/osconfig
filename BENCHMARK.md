@@ -17,7 +17,7 @@ sudo ./install_packages.sh
 Run the Go benchmark test suite (isolated from standard CI pipelines using build tag `-tags=benchmark`):
 
 ```bash
-sudo -E $(which go) test -v -tags=benchmark -run=TestScalibrBenchmark ./packages/
+sudo -E $(which go) test -v -tags=benchmark -run=TestScalibrBenchmark ./packages/ 2>&1 | grep ' | '
 ```
 
 ---
