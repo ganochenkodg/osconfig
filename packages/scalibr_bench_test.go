@@ -73,7 +73,6 @@ func traceMetrics(ctx context.Context, interval time.Duration, resultChan chan<-
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-loop:
 	for {
 		select {
 		case <-ticker.C:
@@ -95,15 +94,14 @@ loop:
 			}
 		case <-ctx.Done():
 			cancelMem()
-			break loop
+			memResult := <-memChan
+			resultChan <- traceMetricsResult{
+				TraceMemoryResult: memResult,
+				CPUPeakPercent:    peakCPU,
+				CPUMeanPercent:    runningAverageCPU,
+			}
+			return
 		}
-	}
-
-	memResult := <-memChan
-	resultChan <- traceMetricsResult{
-		TraceMemoryResult: memResult,
-		CPUPeakPercent:    peakCPU,
-		CPUMeanPercent:   runningAverageCPU,
 	}
 }
 
