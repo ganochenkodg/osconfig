@@ -126,7 +126,7 @@ type benchResult struct {
 }
 
 // runSingleBenchmark runs a single iteration of installed packages extraction with metrics tracing.
-func runSingleBenchmark(ctx context.Context, osinfoProvider *osinfo.Provider, extractors []string) (benchResult, error) {
+func runSingleBenchmark(ctx context.Context, osinfoProvider osinfo.Provider, extractors []string) (benchResult, error) {
 	runtime.GC()
 
 	traceCtx, cancelTrace := context.WithCancel(ctx)
