@@ -36,18 +36,29 @@ type cpuSample struct {
 }
 
 func readProcStatTicks() (uint64, error) {
+	if runtime.GOOS != "linux" {
+		return 0, fmt.Errorf("CPU metrics only supported on linux")
+	}
 	data, err := os.ReadFile("/proc/self/stat")
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("read /proc/self/stat: %w", err)
 	}
-	fields := strings.Fields(string(data))
-	if len(fields) < 15 {
+	statStr := string(data)
+	lastParen := strings.LastIndex(statStr, ")")
+	if lastParen == -1 || lastParen+2 >= len(statStr) {
+		return 0, fmt.Errorf("invalid stat format")
+	}
+	fields := strings.Fields(statStr[lastParen+2:])
+	if len(fields) < 13 {
 		return 0, fmt.Errorf("invalid stat fields count: %d", len(fields))
 	}
-	utime, err1 := strconv.ParseUint(fields[13], 10, 64)
-	stime, err2 := strconv.ParseUint(fields[14], 10, 64)
-	if err1 != nil || err2 != nil {
-		return 0, fmt.Errorf("error parsing cpu ticks")
+	utime, err1 := strconv.ParseUint(fields[11], 10, 64)
+	stime, err2 := strconv.ParseUint(fields[12], 10, 64)
+	if err1 != nil {
+		return 0, fmt.Errorf("error parsing utime: %w", err1)
+	}
+	if err2 != nil {
+		return 0, fmt.Errorf("error parsing stime: %w", err2)
 	}
 	return utime + stime, nil
 }
@@ -129,7 +140,7 @@ func TestScalibrBenchmark(t *testing.T) {
 		runs := 3
 		var totalDuration time.Duration
 		var totalAllocMB float64
-		var lastPeakRAM, lastPeakCPU, lastMeanCPU float64
+		var totalPeakRAM, totalPeakCPU, totalMeanCPU float64
 		var totalPkgs int
 
 		for i := 0; i < runs; i++ {
@@ -160,22 +171,25 @@ func TestScalibrBenchmark(t *testing.T) {
 
 			totalDuration += elapsed
 			totalAllocMB += float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024
-			lastPeakRAM = metrics.MemPeakMB
-			lastPeakCPU = metrics.CPUPeakPercent
-			lastMeanCPU = metrics.CPUMeanPercent
+			totalPeakRAM += metrics.MemPeakMB
+			totalPeakCPU += metrics.CPUPeakPercent
+			totalMeanCPU += metrics.CPUMeanPercent
 			totalPkgs = len(pkgs.Deb) + len(pkgs.Rpm) + len(pkgs.COS)
 		}
 
 		avgDuration := totalDuration / time.Duration(runs)
 		avgAllocMB := totalAllocMB / float64(runs)
+		avgPeakRAM := totalPeakRAM / float64(runs)
+		avgPeakCPU := totalPeakCPU / float64(runs)
+		avgMeanCPU := totalMeanCPU / float64(runs)
 
 		t.Logf("| `%s` | %v | %.2f MB | %.2f MB | %.1f%% | %.1f%% | %d |",
 			bm.label,
 			avgDuration,
 			avgAllocMB,
-			lastPeakRAM,
-			lastPeakCPU,
-			lastMeanCPU,
+			avgPeakRAM,
+			avgPeakCPU,
+			avgMeanCPU,
 			totalPkgs,
 		)
 	}
