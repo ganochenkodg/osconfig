@@ -166,7 +166,7 @@ func runSingleBenchmark(ctx context.Context, osinfoProvider osinfo.Provider, ext
 }
 
 // logBenchResult calculates averages over runs and outputs the formatted benchmark table row.
-func logBenchResult(t *testing.T, label string, res benchResult, runs int) {
+func logBenchResult(t *testing.T, name string, res benchResult, runs int) {
 	if runs <= 0 {
 		return
 	}
@@ -178,7 +178,7 @@ func logBenchResult(t *testing.T, label string, res benchResult, runs int) {
 	avgMeanCPU := res.cpuMean / r
 
 	t.Logf("| `%s` | %v | %.2f MB | %.2f MB | %.1f%% | %.1f%% | %d |",
-		label,
+		name,
 		avgDuration,
 		avgAllocMB,
 		avgPeakRAM,
@@ -190,13 +190,13 @@ func logBenchResult(t *testing.T, label string, res benchResult, runs int) {
 
 func TestScalibrBenchmark(t *testing.T) {
 	benchmarks := []struct {
-		label      string
+		name       string
 		extractors []string
 	}{
-		{label: "All os extractors", extractors: []string{"os/dpkg", "os/rpm", "os/cos"}},
-		{label: "os/dpkg", extractors: []string{"os/dpkg"}},
-		{label: "os/rpm", extractors: []string{"os/rpm"}},
-		{label: "os/cos", extractors: []string{"os/cos"}},
+		{name: "All os extractors", extractors: []string{"os/dpkg", "os/rpm", "os/cos"}},
+		{name: "os/dpkg", extractors: []string{"os/dpkg"}},
+		{name: "os/rpm", extractors: []string{"os/rpm"}},
+		{name: "os/cos", extractors: []string{"os/cos"}},
 	}
 
 	ctx := context.Background()
@@ -214,7 +214,7 @@ func TestScalibrBenchmark(t *testing.T) {
 		for i := 0; i < runs; i++ {
 			res, err := runSingleBenchmark(ctx, osinfoProvider, bm.extractors)
 			if err != nil {
-				t.Fatalf("Benchmark scenario %s failed: %v", bm.label, err)
+				t.Fatalf("Benchmark scenario %s failed: %v", bm.name, err)
 			}
 			total.duration += res.duration
 			total.allocMB += res.allocMB
@@ -224,6 +224,6 @@ func TestScalibrBenchmark(t *testing.T) {
 			total.pkgsCount = res.pkgsCount
 		}
 
-		logBenchResult(t, bm.label, total, runs)
+		logBenchResult(t, bm.name, total, runs)
 	}
 }
