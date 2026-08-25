@@ -116,6 +116,78 @@ func traceMetrics(ctx context.Context, interval time.Duration, resultChan chan<-
 	}
 }
 
+type benchResult struct {
+	duration  time.Duration
+	allocMB   float64
+	memPeakMB float64
+	cpuPeak   float64
+	cpuMean   float64
+	pkgsCount int
+}
+
+// runSingleBenchmark runs a single iteration of installed packages extraction with metrics tracing.
+func runSingleBenchmark(ctx context.Context, osinfoProvider *osinfo.Provider, extractors []string) (benchResult, error) {
+	runtime.GC()
+
+	traceCtx, cancelTrace := context.WithCancel(ctx)
+	resChan := make(chan traceMetricsResult, 1)
+	go traceMetrics(traceCtx, 20*time.Millisecond, resChan)
+
+	var memBefore, memAfter runtime.MemStats
+	runtime.ReadMemStats(&memBefore)
+
+	start := time.Now()
+	provider := &scalibrInstalledPackagesProvider{
+		extractors:     extractors,
+		osinfoProvider: osinfoProvider,
+	}
+	pkgs, err := provider.GetInstalledPackages(ctx)
+	elapsed := time.Since(start)
+
+	runtime.ReadMemStats(&memAfter)
+	cancelTrace()
+
+	metrics := <-resChan
+	if err != nil {
+		return benchResult{}, fmt.Errorf("GetInstalledPackages error: %w", err)
+	}
+
+	pkgsCount := len(pkgs.Deb) + len(pkgs.Rpm) + len(pkgs.COS)
+	allocMB := float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024
+
+	return benchResult{
+		duration:  elapsed,
+		allocMB:   allocMB,
+		memPeakMB: metrics.MemPeakMB,
+		cpuPeak:   metrics.CPUPeakPercent,
+		cpuMean:   metrics.CPUMeanPercent,
+		pkgsCount: pkgsCount,
+	}, nil
+}
+
+// logBenchResult calculates averages over runs and outputs the formatted benchmark table row.
+func logBenchResult(t *testing.T, label string, res benchResult, runs int) {
+	if runs <= 0 {
+		return
+	}
+	r := float64(runs)
+	avgDuration := res.duration / time.Duration(runs)
+	avgAllocMB := res.allocMB / r
+	avgPeakRAM := res.memPeakMB / r
+	avgPeakCPU := res.cpuPeak / r
+	avgMeanCPU := res.cpuMean / r
+
+	t.Logf("| `%s` | %v | %.2f MB | %.2f MB | %.1f%% | %.1f%% | %d |",
+		label,
+		avgDuration,
+		avgAllocMB,
+		avgPeakRAM,
+		avgPeakCPU,
+		avgMeanCPU,
+		res.pkgsCount,
+	)
+}
+
 func TestScalibrBenchmark(t *testing.T) {
 	benchmarks := []struct {
 		label      string
@@ -136,61 +208,22 @@ func TestScalibrBenchmark(t *testing.T) {
 	t.Log("| Scenario | Avg Scan Time | Avg Heap Alloc | Peak RAM RSS | Peak CPU % | Mean CPU % | Pkgs Found |")
 	t.Log("| --- | --- | --- | --- | --- | --- | --- |")
 
+	runs := 3
 	for _, bm := range benchmarks {
-		runs := 3
-		var totalDuration time.Duration
-		var totalAllocMB float64
-		var totalPeakRAM, totalPeakCPU, totalMeanCPU float64
-		var totalPkgs int
-
+		var total benchResult
 		for i := 0; i < runs; i++ {
-			runtime.GC()
-
-			traceCtx, cancelTrace := context.WithCancel(ctx)
-			resChan := make(chan traceMetricsResult, 1)
-			go traceMetrics(traceCtx, 20*time.Millisecond, resChan)
-
-			var memBefore, memAfter runtime.MemStats
-			runtime.ReadMemStats(&memBefore)
-
-			start := time.Now()
-			provider := &scalibrInstalledPackagesProvider{
-				extractors:     bm.extractors,
-				osinfoProvider: osinfoProvider,
-			}
-			pkgs, err := provider.GetInstalledPackages(ctx)
-			elapsed := time.Since(start)
-
-			runtime.ReadMemStats(&memAfter)
-			cancelTrace()
-
-			metrics := <-resChan
+			res, err := runSingleBenchmark(ctx, osinfoProvider, bm.extractors)
 			if err != nil {
 				t.Fatalf("Benchmark scenario %s failed: %v", bm.label, err)
 			}
-
-			totalDuration += elapsed
-			totalAllocMB += float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024
-			totalPeakRAM += metrics.MemPeakMB
-			totalPeakCPU += metrics.CPUPeakPercent
-			totalMeanCPU += metrics.CPUMeanPercent
-			totalPkgs = len(pkgs.Deb) + len(pkgs.Rpm) + len(pkgs.COS)
+			total.duration += res.duration
+			total.allocMB += res.allocMB
+			total.memPeakMB += res.memPeakMB
+			total.cpuPeak += res.cpuPeak
+			total.cpuMean += res.cpuMean
+			total.pkgsCount = res.pkgsCount
 		}
 
-		avgDuration := totalDuration / time.Duration(runs)
-		avgAllocMB := totalAllocMB / float64(runs)
-		avgPeakRAM := totalPeakRAM / float64(runs)
-		avgPeakCPU := totalPeakCPU / float64(runs)
-		avgMeanCPU := totalMeanCPU / float64(runs)
-
-		t.Logf("| `%s` | %v | %.2f MB | %.2f MB | %.1f%% | %.1f%% | %d |",
-			bm.label,
-			avgDuration,
-			avgAllocMB,
-			avgPeakRAM,
-			avgPeakCPU,
-			avgMeanCPU,
-			totalPkgs,
-		)
+		logBenchResult(t, bm.label, total, runs)
 	}
 }
