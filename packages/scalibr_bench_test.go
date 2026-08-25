@@ -163,10 +163,7 @@ func TestScalibrBenchmark(t *testing.T) {
 			lastPeakRAM = metrics.MemPeakMB
 			lastPeakCPU = metrics.CPUPeakPercent
 			lastMeanCPU = metrics.CPUMeanPercent
-			totalPkgs = len(pkgs.Deb) + len(pkgs.Rpm) + len(pkgs.COS) +
-				len(pkgs.Pip) + len(pkgs.Gem) + len(pkgs.Npm) +
-				len(pkgs.Maven) + len(pkgs.Go) + len(pkgs.Cargo) +
-				len(pkgs.Composer) + len(pkgs.Swift) + len(pkgs.Pub)
+			totalPkgs = len(pkgs.Deb) + len(pkgs.Rpm) + len(pkgs.COS)
 		}
 
 		avgDuration := totalDuration / time.Duration(runs)
