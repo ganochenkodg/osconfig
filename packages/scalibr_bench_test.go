@@ -114,7 +114,6 @@ func TestScalibrBenchmark(t *testing.T) {
 		{label: "os/rpm", extractors: []string{"os/rpm"}},
 		{label: "os/cos", extractors: []string{"os/cos"}},
 		{label: "All os extractors", extractors: []string{"os/dpkg", "os/rpm", "os/cos"}},
-		},
 	}
 
 	ctx := context.Background()
