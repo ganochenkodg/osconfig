@@ -67,9 +67,15 @@ type traceMetricsResult struct {
 	utiltrace.TraceMemoryResult
 	CPUPeakPercent float64
 	CPUMeanPercent float64
+	Duration       time.Duration
+	AllocMB        float64
 }
 
 func traceMetrics(ctx context.Context, interval time.Duration, resultChan chan<- traceMetricsResult) {
+	startTime := time.Now()
+	var memBefore runtime.MemStats
+	runtime.ReadMemStats(&memBefore)
+
 	memChan := make(chan utiltrace.TraceMemoryResult, 1)
 	ctxMemory, cancelMem := context.WithCancel(ctx)
 	go utiltrace.TraceMemory(ctxMemory, interval, memChan)
@@ -105,11 +111,16 @@ func traceMetrics(ctx context.Context, interval time.Duration, resultChan chan<-
 			}
 		case <-ctx.Done():
 			cancelMem()
+			var memAfter runtime.MemStats
+			runtime.ReadMemStats(&memAfter)
+			allocMB := float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024
 			memResult := <-memChan
 			resultChan <- traceMetricsResult{
 				TraceMemoryResult: memResult,
 				CPUPeakPercent:    peakCPU,
 				CPUMeanPercent:    runningAverageCPU,
+				Duration:          time.Since(startTime),
+				AllocMB:           allocMB,
 			}
 			return
 		}
@@ -133,18 +144,11 @@ func runSingleBenchmark(ctx context.Context, osinfoProvider osinfo.Provider, ext
 	resChan := make(chan traceMetricsResult, 1)
 	go traceMetrics(traceCtx, 20*time.Millisecond, resChan)
 
-	var memBefore, memAfter runtime.MemStats
-	runtime.ReadMemStats(&memBefore)
-
-	start := time.Now()
 	provider := &scalibrInstalledPackagesProvider{
 		extractors:     extractors,
 		osinfoProvider: osinfoProvider,
 	}
 	pkgs, err := provider.GetInstalledPackages(ctx)
-	elapsed := time.Since(start)
-
-	runtime.ReadMemStats(&memAfter)
 	cancelTrace()
 
 	metrics := <-resChan
@@ -153,11 +157,10 @@ func runSingleBenchmark(ctx context.Context, osinfoProvider osinfo.Provider, ext
 	}
 
 	pkgsCount := len(pkgs.Deb) + len(pkgs.Rpm) + len(pkgs.COS)
-	allocMB := float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024
 
 	return benchResult{
-		duration:  elapsed,
-		allocMB:   allocMB,
+		duration:  metrics.Duration,
+		allocMB:   metrics.AllocMB,
 		memPeakMB: metrics.MemPeakMB,
 		cpuPeak:   metrics.CPUPeakPercent,
 		cpuMean:   metrics.CPUMeanPercent,
