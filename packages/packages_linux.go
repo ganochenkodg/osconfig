@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/osconfig/agentconfig"
@@ -267,20 +266,12 @@ func enrichZypperPatchWithPurl(pkgs []*ZypperPatch, shortname string) []*ZypperP
 // NewInstalledPackagesProvider makes provider that uses osv-scalibr as its implementation if enabled by config, otherwise falls back to default legacy implementation.
 func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPackagesProvider {
 	if agentconfig.ScalibrLinuxEnabled() {
-		extractors := []string{
-			"os/cos",
-			"os/dpkg",
-			"os/rpm",
-		}
-		if agentconfig.ExtendedInventoryEnabled() {
-			for _, ext := range agentconfig.ExtendedInventoryExtractorsAllowed() {
-				if !slices.Contains(extractors, ext) {
-					extractors = append(extractors, ext)
-				}
-			}
-		}
-		return &scalibrInstalledPackagesProvider{
-			extractors:     extractors,
+		return scalibrInstalledPackagesProvider{
+			extractors: []string{
+				"os/cos",
+				"os/dpkg",
+				"os/rpm",
+			},
 			osinfoProvider: osinfoProvider,
 		}
 	}
