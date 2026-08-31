@@ -289,4 +289,3 @@ func NewInstalledPackagesProvider(osinfoProvider osinfo.Provider) InstalledPacka
 		osinfoProvider: osinfoProvider,
 	}
 }
-
